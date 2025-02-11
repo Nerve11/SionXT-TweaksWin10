@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 setlocal EnableDelayedExpansion
-title SionXT-TweaksWin10-V3.2
+title SionXT-TweaksWin10-V3.3
 
 :: ==========================================================================
 ::                      SionXT-TweaksWin10 - License
@@ -52,7 +52,7 @@ echo    [4] CPU Optimization
 echo    [5] SionXT REG optimization
 echo    [6] Cleaning after optimization
 echo    [7] Network Optimization
-echo    [8] Memory Optimization 
+echo    [8] Memory Optimization
 echo    [0] EXIT
 echo.
 set /p choice="Select an option: "
@@ -104,6 +104,34 @@ echo This may improve performance but could also disable some features.
 echo Proceed with caution.
 pause
 echo.
+
+:: Backup Start - Added Backup Functionality from HoneCtrl ==========================
+echo Creating System Restore Point and Registry Backups...
+echo.
+
+:: Make Hone Directory for Backups if it doesn't exist
+mkdir %SYSTEMDRIVE%\Hone >nul 2>&1
+mkdir %SYSTEMDRIVE%\Hone\SionXT_Backup >nul 2>&1
+
+:: Create System Restore Point
+echo Creating System Restore Point...
+reg add "HKLM\Software\Microsoft\Windows NT\CurrentVersion\SystemRestore" /v "SystemRestorePointCreationFrequency" /t REG_DWORD /d 0 /f >nul 2>&1
+powershell -ExecutionPolicy Unrestricted -NoProfile Enable-ComputerRestore -Drive 'C:\', 'D:\', 'E:\', 'F:\', 'G:\' >nul 2>&1
+powershell -ExecutionPolicy Unrestricted -NoProfile Checkpoint-Computer -Description 'SionXT Tweaks - Service Optimization Backup' >nul 2>&1
+
+:: Create Registry Backups
+echo Backing up Registry (HKCU and HKLM)...
+for /F "tokens=2" %%i in ('date /t') do set date=%%i
+set date1=%date:/=.%
+mkdir %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1% >nul 2>&1
+reg export HKCU %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1%\SionXT_HKCU_ServiceOptimization.reg /y >nul 2>&1
+reg export HKLM %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1%\SionXT_HKLM_ServiceOptimization.reg /y >nul 2>&1
+echo.
+echo System Restore Point and Registry Backups Created. Proceeding with Service Optimization...
+timeout /t 3 /nobreak >nul
+
+:: Backup End ====================================================================
+
 
 echo System File Check (SFC) starting...
 echo Estimated time: 10-20 minutes
@@ -482,7 +510,34 @@ echo         and monitor your system after applying these tweaks.
 pause
 echo.
 
-:: DISABLE MEMORY COMPRESSION AND PAGE COMBINE (REQUIRES SYSMAIN) - 
+:: Backup Start - Added Backup Functionality from HoneCtrl ==========================
+echo Creating System Restore Point and Registry Backups...
+echo.
+
+:: Make Hone Directory for Backups if it doesn't exist
+mkdir %SYSTEMDRIVE%\Hone >nul 2>&1
+mkdir %SYSTEMDRIVE%\Hone\SionXT_Backup >nul 2>&1
+
+:: Create System Restore Point
+echo Creating System Restore Point...
+reg add "HKLM\Software\Microsoft\Windows NT\CurrentVersion\SystemRestore" /v "SystemRestorePointCreationFrequency" /t REG_DWORD /d 0 /f >nul 2>&1
+powershell -ExecutionPolicy Unrestricted -NoProfile Enable-ComputerRestore -Drive 'C:\', 'D:\', 'E:\', 'F:\', 'G:\' >nul 2>&1
+powershell -ExecutionPolicy Unrestricted -NoProfile Checkpoint-Computer -Description 'SionXT Tweaks - Memory Optimization Backup' >nul 2>&1
+
+:: Create Registry Backups
+echo Backing up Registry (HKCU and HKLM)...
+for /F "tokens=2" %%i in ('date /t') do set date=%%i
+set date1=%date:/=.%
+mkdir %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1% >nul 2>&1
+reg export HKCU %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1%\SionXT_HKCU_MemoryOptimization.reg /y >nul 2>&1
+reg export HKLM %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1%\SionXT_HKLM_MemoryOptimization.reg /y >nul 2>&1
+echo.
+echo System Restore Point and Registry Backups Created. Proceeding with Memory Optimization...
+timeout /t 3 /nobreak >nul
+
+:: Backup End ====================================================================
+
+:: DISABLE MEMORY COMPRESSION AND PAGE COMBINE (REQUIRES SYSMAIN) -
 echo Applying DISABLE MEMORY COMPRESSION AND PAGE COMBINE Tweaks (Gaming Version)...
 sc config SysMain start= auto
 if %errorlevel% neq 0 (
@@ -541,6 +596,33 @@ echo Proceed with caution.
 pause
 echo.
 
+:: Backup Start - Added Backup Functionality from HoneCtrl ==========================
+echo Creating System Restore Point and Registry Backups...
+echo.
+
+:: Make Hone Directory for Backups if it doesn't exist
+mkdir %SYSTEMDRIVE%\Hone >nul 2>&1
+mkdir %SYSTEMDRIVE%\Hone\SionXT_Backup >nul 2>&1
+
+:: Create System Restore Point
+echo Creating System Restore Point...
+reg add "HKLM\Software\Microsoft\Windows NT\CurrentVersion\SystemRestore" /v "SystemRestorePointCreationFrequency" /t REG_DWORD /d 0 /f >nul 2>&1
+powershell -ExecutionPolicy Unrestricted -NoProfile Enable-ComputerRestore -Drive 'C:\', 'D:\', 'E:\', 'F:\', 'G:\' >nul 2>&1
+powershell -ExecutionPolicy Unrestricted -NoProfile Checkpoint-Computer -Description 'SionXT Tweaks - Debloat Backup' >nul 2>&1
+
+:: Create Registry Backups
+echo Backing up Registry (HKCU and HKLM)...
+for /F "tokens=2" %%i in ('date /t') do set date=%%i
+set date1=%date:/=.%
+mkdir %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1% >nul 2>&1
+reg export HKCU %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1%\SionXT_HKCU_Debloat.reg /y >nul 2>&1
+reg export HKLM %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1%\SionXT_HKLM_Debloat.reg /y >nul 2>&1
+echo.
+echo System Restore Point and Registry Backups Created. Proceeding with Debloat...
+timeout /t 3 /nobreak >nul
+
+:: Backup End ====================================================================
+
 echo Removing pre-installed applications...
 
 :: List of packages to remove
@@ -570,25 +652,53 @@ echo **INFO:** Applying GPU Optimization tweaks for NVIDIA cards.
 echo Proceed with caution.
 pause
 timeout /t 5 /nobreak >nul
+
+:: Backup Start - Added Backup Functionality from HoneCtrl ==========================
+echo Creating System Restore Point and Registry Backups...
+echo.
+
+:: Make Hone Directory for Backups if it doesn't exist
+mkdir %SYSTEMDRIVE%\Hone >nul 2>&1
+mkdir %SYSTEMDRIVE%\Hone\SionXT_Backup >nul 2>&1
+
+:: Create System Restore Point
+echo Creating System Restore Point...
+reg add "HKLM\Software\Microsoft\Windows NT\CurrentVersion\SystemRestore" /v "SystemRestorePointCreationFrequency" /t REG_DWORD /d 0 /f >nul 2>&1
+powershell -ExecutionPolicy Unrestricted -NoProfile Enable-ComputerRestore -Drive 'C:\', 'D:\', 'E:\', 'F:\', 'G:\' >nul 2>&1
+powershell -ExecutionPolicy Unrestricted -NoProfile Checkpoint-Computer -Description 'SionXT Tweaks - GPU Nvidia Optimization Backup' >nul 2>&1
+
+:: Create Registry Backups
+echo Backing up Registry (HKCU and HKLM)...
+for /F "tokens=2" %%i in ('date /t') do set date=%%i
+set date1=%date:/=.%
+mkdir %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1% >nul 2>&1
+reg export HKCU %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1%\SionXT_HKCU_GPU_Nvidia_Optimization.reg /y >nul 2>&1
+reg export HKLM %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1%\SionXT_HKLM_GPU_Nvidia_Optimization.reg /y >nul 2>&1
+echo.
+echo System Restore Point and Registry Backups Created. Proceeding with Nvidia GPU Optimization...
+timeout /t 3 /nobreak >nul
+
+:: Backup End ====================================================================
+
 goto :gpusettings_section
 
 :gpusettings_section
 echo Applying Nvidia GPU Optimizations...
 
-:: Nvidia Driver Thread Priority 
+:: Nvidia Driver Thread Priority
 call :execute_command "reg add "HKLM\SYSTEM\CurrentControlSet\Services\nvlddmkm\Parameters" /v "ThreadPriority" /t REG_DWORD /d "31" /f"
 
-:: DXGKrnl Thread Priority 
+:: DXGKrnl Thread Priority
 call :execute_command "reg add "HKLM\SYSTEM\CurrentControlSet\Services\DXGKrnl\Parameters" /v "ThreadPriority" /t REG_DWORD /d "15" /f"
 
-:: Optimize GPU Priority Scheduling 
+:: Optimize GPU Priority Scheduling
 call :execute_command "reg add "HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers" /v "RmGpsPsEnablePerCpuCoreDpc" /t REG_DWORD /d "1" /f"
 call :execute_command "reg add "HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers\Power" /v "RmGpsPsEnablePerCpuCoreDpc" /t REG_DWORD /d "1" /f"
 call :execute_command "reg add "HKLM\SYSTEM\CurrentControlSet\Services\nvlddmkm" /v "RmGpsPsEnablePerCpuCoreDpc" /t REG_DWORD /d "1" /f"
 call :execute_command "reg add "HKLM\SYSTEM\CurrentControlSet\Services\nvlddmkm\NVAPI" /v "RmGpsPsEnablePerCpuCoreDpc" /t REG_DWORD /d "1" /f"
 call :execute_command "reg add "HKLM\SYSTEM\CurrentControlSet\Services\nvlddmkm\Global\NVTweak" /v "RmGpsPsEnablePerCpuCoreDpc" /t REG_DWORD /d "1" /f"
 
-:: Nvidia Turbo Queue and SBA 
+:: Nvidia Turbo Queue and SBA
 call :execute_command "reg add "HKLM\SOFTWARE\NVIDIA Corporation\Global\System" /v "TurboQueue" /t REG_DWORD /d "1" /f"
 call :execute_command "reg add "HKLM\SOFTWARE\NVIDIA Corporation\Global\System" /v "EnableVIASBA" /t REG_DWORD /d "1" /f"
 call :execute_command "reg add "HKLM\SOFTWARE\NVIDIA Corporation\Global\System" /v "EnableIrongateSBA" /t REG_DWORD /d "1" /f"
@@ -606,20 +716,48 @@ goto main_menu
 
 :amdgpusettings
 cls
-echo GPU Optimization (AMD - Secret Tweaks) is selected.
+echo GPU Optimization (AMD) is selected.
 echo.
 echo **WARNING:** Applying GPU Optimization tweaks for AMD cards.
-echo These are considered "secret" tweaks and their effectiveness may vary.
+
 echo Proceed with caution and test thoroughly after applying.
 echo **Disclaimer:** These tweaks are based on publicly available information
 echo and community findings, not on "paid" or truly hidden optimizations.
 echo Actual performance gains are system-dependent and results may vary.
 pause
 timeout /t 5 /nobreak >nul
+
+:: Backup Start - Added Backup Functionality from HoneCtrl ==========================
+echo Creating System Restore Point and Registry Backups...
+echo.
+
+:: Make Hone Directory for Backups if it doesn't exist
+mkdir %SYSTEMDRIVE%\Hone >nul 2>&1
+mkdir %SYSTEMDRIVE%\Hone\SionXT_Backup >nul 2>&1
+
+:: Create System Restore Point
+echo Creating System Restore Point...
+reg add "HKLM\Software\Microsoft\Windows NT\CurrentVersion\SystemRestore" /v "SystemRestorePointCreationFrequency" /t REG_DWORD /d 0 /f >nul 2>&1
+powershell -ExecutionPolicy Unrestricted -NoProfile Enable-ComputerRestore -Drive 'C:\', 'D:\', 'E:\', 'F:\', 'G:\' >nul 2>&1
+powershell -ExecutionPolicy Unrestricted -NoProfile Checkpoint-Computer -Description 'SionXT Tweaks - GPU AMD Optimization Backup' >nul 2>&1
+
+:: Create Registry Backups
+echo Backing up Registry (HKCU and HKLM)...
+for /F "tokens=2" %%i in ('date /t') do set date=%%i
+set date1=%date:/=.%
+mkdir %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1% >nul 2>&1
+reg export HKCU %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1%\SionXT_HKCU_GPU_AMD_Optimization.reg /y >nul 2>&1
+reg export HKLM %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1%\SionXT_HKLM_GPU_AMD_Optimization.reg /y >nul 2>&1
+echo.
+echo System Restore Point and Registry Backups Created. Proceeding with AMD GPU Optimization...
+timeout /t 3 /nobreak >nul
+
+:: Backup End ====================================================================
+
 goto :amdgpusettings_section
 
 :amdgpusettings_section
-echo Applying AMD GPU Optimizations (Secret Tweaks)...
+echo Applying AMD GPU Optimizations...
 
 :: AMD Shader Cache Size (
 echo Setting AMD Shader Cache Size...
@@ -633,14 +771,14 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08
 echo Enabling AMD Surface Format Optimization...
 reg add "HKLM\SOFTWARE\AMD\Catalyst" /v "SurfaceFormatOptimizations" /t REG_DWORD /d "1" /f 2>nul
 
-:: AMD Flip Queue Size 
+:: AMD Flip Queue Size
 echo Setting AMD Flip Queue Size...
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "FlipQueueSize" /t REG_DWORD /d "2" /f 2>nul
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0001" /v "FlipQueueSize" /t REG_DWORD /d "2" /f 2>nul
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0002" /v "FlipQueueSize" /t REG_DWORD /d "2" /f 2>nul
 :: Note:  Again, instance numbers might need dynamic detection.
 
-:: AMD Power Saving Features 
+:: AMD Power Saving Features
 echo Disabling AMD ULPS (Ultra Low Power State)...
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "EnableUlps" /t REG_DWORD /d "0" /f 2>nul
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0001" /v "EnableUlps" /t REG_DWORD /d "0" /f 2>nul
@@ -648,7 +786,7 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08
 :: Note: ULPS disabling might be more relevant for multi-GPU setups, test impact.
 
 echo.
-echo AMD GPU Optimization (Secret Tweaks) completed. Returning to main menu.
+echo AMD GPU Optimization completed. Returning to main menu.
 timeout /t 5 /nobreak >nul
 goto main_menu
 
@@ -661,23 +799,51 @@ echo **INFO:** Applying CPU Optimization tweaks to improve performance.
 echo Proceed with caution.
 pause
 timeout /t 5 /nobreak >nul
+
+:: Backup Start - Added Backup Functionality from HoneCtrl ==========================
+echo Creating System Restore Point and Registry Backups...
+echo.
+
+:: Make Hone Directory for Backups if it doesn't exist
+mkdir %SYSTEMDRIVE%\Hone >nul 2>&1
+mkdir %SYSTEMDRIVE%\Hone\SionXT_Backup >nul 2>&1
+
+:: Create System Restore Point
+echo Creating System Restore Point...
+reg add "HKLM\Software\Microsoft\Windows NT\CurrentVersion\SystemRestore" /v "SystemRestorePointCreationFrequency" /t REG_DWORD /d 0 /f >nul 2>&1
+powershell -ExecutionPolicy Unrestricted -NoProfile Enable-ComputerRestore -Drive 'C:\', 'D:\', 'E:\', 'F:\', 'G:\' >nul 2>&1
+powershell -ExecutionPolicy Unrestricted -NoProfile Checkpoint-Computer -Description 'SionXT Tweaks - CPU Optimization Backup' >nul 2>&1
+
+:: Create Registry Backups
+echo Backing up Registry (HKCU and HKLM)...
+for /F "tokens=2" %%i in ('date /t') do set date=%%i
+set date1=%date:/=.%
+mkdir %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1% >nul 2>&1
+reg export HKCU %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1%\SionXT_HKCU_CPU_Optimization.reg /y >nul 2>&1
+reg export HKLM %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1%\SionXT_HKLM_CPU_Optimization.reg /y >nul 2>&1
+echo.
+echo System Restore Point and Registry Backups Created. Proceeding with CPU Optimization...
+timeout /t 3 /nobreak >nul
+
+:: Backup End ====================================================================
+
 goto :cpusettings_section
 
 :cpusettings_section
 echo Applying CPU Optimizations...
 
-:: Disable Core Parking 
+:: Disable Core Parking
 echo Disabling Core Parking...
 powercfg /setacvalue SCHEME_CURRENT SUB_PROCESSOR PROCPARKMAX 100
 powercfg /setactive SCHEME_CURRENT
 if %errorlevel% neq 0 echo **WARNING:** Error disabling Core Parking.
 
-:: Set System Responsiveness 
+:: Set System Responsiveness
 echo Setting System Responsiveness...
 reg add "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile" /v "SystemResponsiveness" /t REG_DWORD /d "0" /f
 if %errorlevel% neq 0 echo **WARNING:** Error setting System Responsiveness.
 
-:: Enable HPET (High Precision Event Timer) 
+:: Enable HPET (High Precision Event Timer)
 echo Enabling HPET...
 bcdedit /set useplatformclock true
 if %errorlevel% neq 0 echo **WARNING:** Error enabling HPET.
@@ -693,9 +859,8 @@ goto main_menu
 
 
 :regsettings
-goto :regsettings_section
 
-:regsettings_section
+:: Backup Start - Added Backup Functionality from HoneCtrl ==========================
 cls
 echo Applying SionXT REG optimization...
 echo.
@@ -705,6 +870,35 @@ echo Proceed with caution.
 pause
 echo.
 
+echo Creating System Restore Point and Registry Backups...
+echo.
+
+:: Make Hone Directory for Backups if it doesn't exist
+mkdir %SYSTEMDRIVE%\Hone >nul 2>&1
+mkdir %SYSTEMDRIVE%\Hone\SionXT_Backup >nul 2>&1
+
+:: Create System Restore Point
+echo Creating System Restore Point...
+reg add "HKLM\Software\Microsoft\Windows NT\CurrentVersion\SystemRestore" /v "SystemRestorePointCreationFrequency" /t REG_DWORD /d 0 /f >nul 2>&1
+powershell -ExecutionPolicy Unrestricted -NoProfile Enable-ComputerRestore -Drive 'C:\', 'D:\', 'E:\', 'F:\', 'G:\' >nul 2>&1
+powershell -ExecutionPolicy Unrestricted -NoProfile Checkpoint-Computer -Description 'SionXT Tweaks - REG Optimization Backup' >nul 2>&1
+
+:: Create Registry Backups
+echo Backing up Registry (HKCU and HKLM)...
+for /F "tokens=2" %%i in ('date /t') do set date=%%i
+set date1=%date:/=.%
+mkdir %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1% >nul 2>&1
+reg export HKCU %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1%\SionXT_HKCU_REG_Optimization.reg /y >nul 2>&1
+reg export HKLM %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1%\SionXT_HKLM_REG_Optimization.reg /y >nul 2>&1
+echo.
+echo System Restore Point and Registry Backups Created. Proceeding with REG Optimization...
+timeout /t 3 /nobreak >nul
+
+:: Backup End ====================================================================
+
+goto :regsettings_section
+
+:regsettings_section
 set "executed_commands="
 
 :: Function to execute command and check errorlevel
@@ -724,29 +918,29 @@ if "!executed_commands:;!command;=!"=="!executed_commands!" (
 )
 :end_execute_command
 
-:: Mouse HID Optimize 
+:: Mouse HID Optimize
 echo Setting Mouse HID Parameters...
 call :execute_command "reg add "HKLM\SYSTEM\CurrentControlSet\Services\mouhid\Parameters" /v "TreatAbsolutePointerAsAbsolute" /t REG_DWORD /d "1" /f"
 call :execute_command "reg add "HKLM\SYSTEM\CurrentControlSet\Services\mouhid\Parameters" /v "TreatAbsoluteAsRelative" /t REG_DWORD /d "0" /f"
 
-:: Disable Mouse Acceleration 
+:: Disable Mouse Acceleration
 echo Disabling Mouse Acceleration...
 call :execute_command "reg add "HKCU\Control Panel\Mouse" /v "MouseSensitivity" /t REG_SZ /d "10" /f"
 call :execute_command "reg add "HKCU\Control Panel\Mouse" /v "MouseSpeed" /t REG_DWORD /d "0" /f"
 call :execute_command "reg add "HKCU\Control Panel\Mouse" /v "MouseThreshold1" /t REG_DWORD /d "0" /f"
 call :execute_command "reg add "HKCU\Control Panel\Mouse" /v "MouseThreshold2" /t REG_DWORD /d "0" /f"
 
-:: Mouse Absolute Curve 
+:: Mouse Absolute Curve
 echo Setting Mouse Absolute Curve...
 call :execute_command "reg add "HKCU\Control Panel\Mouse" /v "SmoothMouseXCurve" /t REG_BINARY /d "000000000000000000a0000000000000004001000000000000800200000000000000050000000000" /f"
 call :execute_command "reg add "HKCU\Control Panel\Mouse" /v "SmoothMouseYCurve" /t REG_BINARY /d "000000000000000066a6020000000000cd4c050000000000a0990a00000000003833150000000000" /f"
 
-:: Disable Sticky and Toggle Keys 
+:: Disable Sticky and Toggle Keys
 echo Disabling Sticky and Toggle Keys...
 call :execute_command "reg add "HKCU\Control Panel\Accessibility\StickyKeys" /v "Flags" /t REG_SZ /d "506" /f"
 call :execute_command "reg add "HKCU\Control Panel\Accessibility\ToggleKeys" /v "Flags" /t REG_SZ /d "58" /f"
 
-:: Disable Filter Keys 
+:: Disable Filter Keys
 echo Disabling Filter Keys...
 call :execute_command "reg add "HKCU\Control Panel\Accessibility\Keyboard Response" /v "Flags" /t REG_SZ /d "122" /f"
 
@@ -906,12 +1100,12 @@ for /f "tokens=2 delims==" %%i in ('wmic path Win32_USBController get PNPDeviceI
     call :execute_command "reg add "HKLM\System\CurrentControlSet\Enum\!deviceId!\Device Parameters" /v "SelectiveSuspendOn" /t REG_DWORD /d "0" /f"
 )
 
-:: USB Host Controller Thread Priority 
+:: USB Host Controller Thread Priority
 echo Setting USB Host Controller Thread Priority...
 call :execute_command "reg add "HKLM\SYSTEM\CurrentControlSet\Services\usbxhci\Parameters" /v "ThreadPriority" /t REG_DWORD /d "31" /f"
 call :execute_command "reg add "HKLM\SYSTEM\CurrentControlSet\Services\USBHUB3\Parameters" /v "ThreadPriority" /t REG_DWORD /d "31" /f"
 
-:: NDIS Thread Priority 
+:: NDIS Thread Priority
 echo Setting NDIS Thread Priority...
 call :execute_command "reg add "HKLM\SYSTEM\CurrentControlSet\Services\NDIS\Parameters" /v "ThreadPriority" /t REG_DWORD /d "31" /f"
 
@@ -942,6 +1136,33 @@ echo **WARNING:** This option will delete temporary files and system caches.
 echo Make sure you close any important applications before proceeding.
 pause
 echo.
+
+:: Backup Start - Added Backup Functionality from HoneCtrl ==========================
+echo Creating System Restore Point and Registry Backups...
+echo.
+
+:: Make Hone Directory for Backups if it doesn't exist
+mkdir %SYSTEMDRIVE%\Hone >nul 2>&1
+mkdir %SYSTEMDRIVE%\Hone\SionXT_Backup >nul 2>&1
+
+:: Create System Restore Point
+echo Creating System Restore Point...
+reg add "HKLM\Software\Microsoft\Windows NT\CurrentVersion\SystemRestore" /v "SystemRestorePointCreationFrequency" /t REG_DWORD /d 0 /f >nul 2>&1
+powershell -ExecutionPolicy Unrestricted -NoProfile Enable-ComputerRestore -Drive 'C:\', 'D:\', 'E:\', 'F:\', 'G:\' >nul 2>&1
+powershell -ExecutionPolicy Unrestricted -NoProfile Checkpoint-Computer -Description 'SionXT Tweaks - Cleaning Backup' >nul 2>&1
+
+:: Create Registry Backups
+echo Backing up Registry (HKCU and HKLM)...
+for /F "tokens=2" %%i in ('date /t') do set date=%%i
+set date1=%date:/=.%
+mkdir %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1% >nul 2>&1
+reg export HKCU %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1%\SionXT_HKCU_Cleaning.reg /y >nul 2>&1
+reg export HKLM %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1%\SionXT_HKLM_Cleaning.reg /y >nul 2>&1
+echo.
+echo System Restore Point and Registry Backups Created. Proceeding with Cleaning...
+timeout /t 3 /nobreak >nul
+
+:: Backup End ====================================================================
 
 echo Cleaning Cache and Logs...
 md c:\windows\temp >nul 2>&1
@@ -974,6 +1195,34 @@ echo **INFO:** Applying Network Optimization tweaks to improve latency and throu
 echo Proceed with caution.
 pause
 timeout /t 3 /nobreak >nul
+
+:: Backup Start - Added Backup Functionality from HoneCtrl ==========================
+echo Creating System Restore Point and Registry Backups...
+echo.
+
+:: Make Hone Directory for Backups if it doesn't exist
+mkdir %SYSTEMDRIVE%\Hone >nul 2>&1
+mkdir %SYSTEMDRIVE%\Hone\SionXT_Backup >nul 2>&1
+
+:: Create System Restore Point
+echo Creating System Restore Point...
+reg add "HKLM\Software\Microsoft\Windows NT\CurrentVersion\SystemRestore" /v "SystemRestorePointCreationFrequency" /t REG_DWORD /d 0 /f >nul 2>&1
+powershell -ExecutionPolicy Unrestricted -NoProfile Enable-ComputerRestore -Drive 'C:\', 'D:\', 'E:\', 'F:\', 'G:\' >nul 2>&1
+powershell -ExecutionPolicy Unrestricted -NoProfile Checkpoint-Computer -Description 'SionXT Tweaks - Network Optimization Backup' >nul 2>&1
+
+:: Create Registry Backups
+echo Backing up Registry (HKCU and HKLM)...
+for /F "tokens=2" %%i in ('date /t') do set date=%%i
+set date1=%date:/=.%
+mkdir %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1% >nul 2>&1
+reg export HKCU %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1%\SionXT_HKCU_Network_Optimization.reg /y >nul 2>&1
+reg export HKLM %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1%\SionXT_HKLM_Network_Optimization.reg /y >nul 2>&1
+echo.
+echo System Restore Point and Registry Backups Created. Proceeding with Network Optimization...
+timeout /t 3 /nobreak >nul
+
+:: Backup End ====================================================================
+
 goto :network_optimization_section
 
 :network_optimization_section
