@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 setlocal EnableDelayedExpansion
-title SionXT-TweaksWin10-V3.1
+title SionXT-TweaksWin10-V3.2
 
 :: ==========================================================================
 ::                      SionXT-TweaksWin10 - License
@@ -256,7 +256,6 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Services\AppReadiness" /v "Start" /t REG_
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\AppXSvc" /v "Start" /t REG_DWORD /d "4" /f 2>nul
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\AssignedAccessManagerSvc" /v "Start" /t REG_DWORD /d "4" /f 2>nul
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\AudioEndpointBuilder" /v "Start" /t REG_DWORD /d "2" /f 2>nul
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\Audiosrv" /v "Start" /t REG_DWORD /d "2" /f 2>nul
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\autotimesvc" /v "Start" /t REG_DWORD /d "4" /f 2>nul
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\AxInstSV" /v "Start" /t REG_DWORD /d "4" /f 2>nul
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\BITS" /v "Start" /t REG_DWORD /d "4" /f 2>nul
@@ -980,31 +979,93 @@ goto :network_optimization_section
 :network_optimization_section
 echo Applying Network Optimizations...
 
-:: Enable TCP Fast Open 
+:: **QoS Packet Scheduler Configuration for Games**
+echo Configuring QoS Packet Scheduler for Games...
+
+:: **Warning:**  QoS policies might require administrator privileges to be fully effective.
+::            Also, overly aggressive QoS can sometimes starve other network traffic.
+::            Test your network performance after applying these policies.
+
+:: **Method 1: Prioritize based on Executable Name (Example: game.exe)**
+echo Creating QoS Policy to prioritize game traffic (by executable name)...
+netsh qos policy add name="Game Traffic Priority (Exe)" appname="game.exe" priority=6
+if %errorlevel% neq 0 echo **WARNING:** Error adding QoS policy by executable name.
+echo **INFO:**  QoS Policy added to prioritize traffic from "game.exe".
+echo **INFO:**  **You need to replace "game.exe" with the actual executable name of your game.**
+echo **INFO:**  You can add multiple policies for different game executables.
+
+:: **Method 2: Prioritize based on Port Range (Example: UDP ports 27000-27030 - Steam Games)**
+echo Creating QoS Policy to prioritize game traffic (by port range - UDP 27000-27030)...
+netsh qos policy add name="Game Traffic Priority (UDP Ports)" ipprotocol=UDP srcportrange=0-65535 dstportrange=27000-27030 priority=5
+if %errorlevel% neq 0 echo **WARNING:** Error adding QoS policy by port range.
+echo **INFO:**  QoS Policy added to prioritize UDP traffic on ports 27000-27030 (example for Steam games).
+echo **INFO:**  You may need to adjust the port range based on the games you play.
+echo **INFO:**  Consult your game's documentation or network settings for port information.
+
+:: **Explanation of QoS Priorities:**
+echo **INFO:**  QoS Priorities range from 0 (Lowest) to 7 (Highest).
+echo **INFO:**  7 - Critical, 6 - High, 5 - Medium-High, 4 - Medium, 3 - Medium-Low, 2 - Low, 1 - Best Effort, 0 - Background.
+echo **INFO:**  We are using Priority 6 (High) for executable-based policy and 5 (Medium-High) for port-based policy.
+echo **INFO:**  Adjust priorities as needed, but higher priority for games is generally recommended.
+
+:: Enable TCP Fast Open (Already present - keeping it)
 echo Enabling TCP Fast Open...
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "EnableFastOpen" /t REG_DWORD /d "2" /f
 if %errorlevel% neq 0 echo **WARNING:** Error enabling TCP Fast Open.
 
-:: Increase TCP Window Size 
+:: Increase TCP Window Size (Already present - keeping it)
 echo Increasing TCP Window Size...
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "TcpWindowSize" /t REG_DWORD /d "65535" /f
 if %errorlevel% neq 0 echo **WARNING:** Error increasing TCP Window Size.
 
-:: Enable Congestion Control Algorithm 
+:: Enable Congestion Control Algorithm (CTCP - Already present - keeping it)
 echo Enabling CTCP Congestion Control...
 netsh int tcp set global congestionprovider=ctcp
 if %errorlevel% neq 0 echo **WARNING:** Error enabling CTCP.
 
-:: Disable Nagle's Algorithm 
+:: Disable Nagle's Algorithm (Already present - keeping it)
 echo Disabling Nagle's Algorithm...
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters" /v "TcpAckFrequency" /t REG_DWORD /d "1" /f
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\Interfaces" /v "TcpAckFrequency" /t REG_DWORD /d "1" /f
 if %errorlevel% neq 0 echo **WARNING:** Error disabling Nagle's Algorithm.
 
-:: Enable QoS Packet Scheduler 
-echo Enabling QoS Packet Scheduler...
+:: Enable QoS Packet Scheduler (Already present - but now policies are configured)
+echo Enabling QoS Packet Scheduler... (Policies are now configured)
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows\QoS\QoSPolicyDefinitions" /v "EnableQoS" /t REG_DWORD /d "1" /f
 if %errorlevel% neq 0 echo **WARNING:** Error enabling QoS Packet Scheduler.
+
+
+:: **Bufferbloat Mitigation Tweaks**
+echo Applying Bufferbloat Mitigation Tweaks...
+
+:: **1.  ECN (Explicit Congestion Notification) - Enable**
+echo Enabling ECN (Explicit Congestion Notification)...
+netsh int tcp set global ecncapability=enabled
+if %errorlevel% neq 0 echo **WARNING:** Error enabling ECN.
+echo **INFO:**  ECN can help reduce bufferbloat by signaling congestion early.
+echo **INFO:**  Requires router and remote server support for ECN to be effective.
+
+:: **2.  DSCP Marking (Differentiated Services Code Point) -  Mark Game Traffic (Example: DSCP 46 - Expedited Forwarding)**
+echo Marking Game Traffic with DSCP (Expedited Forwarding - DSCP 46)...
+echo **INFO:**  DSCP marking works in conjunction with QoS policies.
+echo **INFO:**  The QoS policies created above already include DSCP marking by default based on priority.
+echo **INFO:**  For example, Priority 6 (High) typically maps to DSCP CS6 (Class Selector 6), which is often treated as high priority.
+echo **INFO:**  Priority 5 (Medium-High) typically maps to DSCP CS5.
+echo **INFO:**  You can customize DSCP values in the QoS policies if needed using the 'dscp' parameter in 'netsh qos policy add'.
+echo **INFO:**  Example to set DSCP to Expedited Forwarding (EF - DSCP 46) for the executable-based policy:
+echo **INFO:**  `netsh qos policy add name="Game Traffic Priority (Exe)" appname="game.exe" priority=6 dscp=46`
+echo **INFO:**  However, for most home networks, the default DSCP marking based on QoS priority should be sufficient.
+
+
+:: **Important Notes on QoS and Bufferbloat Tweaks:**
+echo.
+echo **IMPORTANT:**  QoS and bufferbloat tweaks are most effective when your router also supports QoS and bufferbloat mitigation techniques (e.g., SQM - Smart Queue Management).
+echo **IMPORTANT:**  These tweaks primarily affect outbound traffic from your computer.
+echo **IMPORTANT:**  The effectiveness of these tweaks can vary depending on your network setup, internet connection, and the games you play.
+echo **IMPORTANT:**  Incorrect QoS or bufferbloat settings can sometimes worsen network performance.
+echo **IMPORTANT:**  **Test your network performance (ping, latency, jitter, bufferbloat) before and after applying these tweaks to measure the impact.**
+echo **IMPORTANT:**  Use online tools like speedtest.net, waveformbufferbloat.com, or DSLReports Speed Test to check bufferbloat and network performance.
+
 
 echo.
 echo Network Optimization completed. Returning to main menu.
