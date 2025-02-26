@@ -1,4 +1,13 @@
 # SionXT-TweaksWin10  
-![alt text](https://img.shields.io/badge/Windows%2010-0078D6?logo=windows&logoColor=white)
+![alt text](https://img.shields.io/badge/Windows%2010-0078D6?logo=windows&logoColor=white) Настройки и оптимизация системы для Windows 10
 ____
- Настройки и оптимизация системы для Windows 10
+
+## Описание проекта  
+
+Коллекция скриптов и инструментов для настройки Windows 10 под ваши потребности. Содержит:   
+
+   * Автоматическую оптимизацию системы  
+   * Настройки приватности  
+   * Улучшения производительности  
+   * Дополнительные твики для удобства работы
+
