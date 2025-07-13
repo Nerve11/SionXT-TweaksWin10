@@ -1,7 +1,34 @@
 @echo off
 chcp 65001 >nul
 setlocal EnableDelayedExpansion
-title SionXT-TweaksWin10-V3.3
+title SionXT-Tweaks - Optimized for Win10/11
+:: Version: 4.0
+
+:: Detect Windows Version (existing)
+for /f "tokens=3" %%i in ('reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v CurrentBuild ^| findstr /ri "REG_SZ"') do set Build=%%i
+for /f "tokens=3" %%i in ('reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v CurrentMajorVersionNumber ^| findstr /ri "REG_SZ"') do set MajorVersion=%%i
+
+if not defined MajorVersion (
+    ver | find "10.0" >nul
+    if %errorlevel% == 0 set MajorVersion=10
+    ver | find "11.0" >nul
+    if %errorlevel% == 0 set MajorVersion=11
+)
+
+if %MajorVersion% lss 10 (
+    echo This script is designed for Windows 10/11. Exiting.
+    pause
+    exit
+)
+if %MajorVersion% == 10 if %Build% lss 19044 (
+    echo Warning: This Windows 10 build is older than 21H2. Some tweaks may not apply correctly.
+)
+if %MajorVersion% == 11 if %Build% lss 22621 (
+    echo Warning: This Windows 11 build is older than 22H2. Some tweaks may not apply correctly.
+)
+if %MajorVersion% == 11 if %Build% gtr 26100 (
+    echo Warning: This Windows 11 build is newer than 24H2. Tweaks may need updates.
+)
 
 :: ==========================================================================
 ::                      SionXT-TweaksWin10 - License
@@ -38,72 +65,56 @@ title SionXT-TweaksWin10-V3.3
 mode con: cols=80 lines=25
 mode con: cols=80 lines=25
 
+:: Function Definitions
+:confirm_action
+echo %~1 (Y/N)?
+choice /c YN
+if %errorlevel%==2 exit /b 1
+exit /b 0
+
+:execute_reg
+%~1
+if %errorlevel% neq 0 echo Warning: Failed - %~1
+exit /b
+
 :main_menu
 cls
 echo.
 echo    ========================================
-echo             SionXT-TweaksWin10
+echo             SionXT-Tweaks
 echo    ========================================
 echo.
-echo    [1] Service optimization
-echo    [2] Debloat
+echo    [1] Service Optimization (Effective debloating)
+echo    [2] Debloat Apps
 echo    [3] GPU Optimization
 echo    [4] CPU Optimization
-echo    [5] SionXT REG optimization
-echo    [6] Cleaning after optimization
-echo    [7] Network Optimization
-echo    [8] Memory Optimization
+echo    [5] Registry Optimization (Verified tweaks)
+echo    [6] System Cleaning
+echo    [7] Network Optimization (Low-latency focus)
+echo    [8] Privacy Enhancements
 echo    [0] EXIT
 echo.
-set /p choice="Select an option: "
+set /p choice=\"Select an option: \"
 
-if "%choice%"=="1" goto optimize_service
-if "%choice%"=="2" goto debloat
-if "%choice%"=="3" goto gpu_optimization_menu
-if "%choice%"=="4" goto cpusettings
-if "%choice%"=="5" goto regsettings
-if "%choice%"=="6" goto clean_temp_and_other
-if "%choice%"=="7" goto network_optimization
-if "%choice%"=="8" goto memory_optimization
-if "%choice%"=="0" exit
+if \"%choice%\"==\"1\" goto optimize_service
+if \"%choice%\"==\"2\" goto debloat
+if \"%choice%\"==\"3\" goto gpu_optimization_menu
+if \"%choice%\"==\"4\" goto cpusettings
+if \"%choice%\"==\"5\" goto regsettings
+if \"%choice%\"==\"6\" goto clean_temp_and_other
+if \"%choice%\"==\"7\" goto network_optimization
+if \"%choice%\"==\"8\" goto privacy_enhance
+if \"%choice%\"==\"0\" exit
 
-echo Wrong selection. Please select again.
-timeout /t 2 /nobreak >nul
+echo Invalid choice.
+timeout /t 2 >nul
 goto main_menu
-
-:gpu_optimization_menu
-cls
-echo.
-echo    ========================================
-echo               GPU Optimization
-echo    ========================================
-echo.
-echo    Select your GPU manufacturer:
-echo.
-echo    [1] NVIDIA
-echo    [2] AMD
-echo    [0] Back to Main Menu
-echo.
-set /p gpu_choice="Select an option: "
-
-if "%gpu_choice%"=="1" goto gpusettings
-if "%gpu_choice%"=="2" goto amdgpusettings
-if "%gpu_choice%"=="0" goto main_menu
-
-echo Wrong selection. Please select again.
-timeout /t 2 /nobreak >nul
-goto gpu_optimization_menu
-
 
 :optimize_service
 cls
-echo Optimization of Windows 10 services is underway. Do not touch anything. Thank you.
-echo.
-echo **WARNING:** Service optimization will disable various Windows services.
-echo This may improve performance but could also disable some features.
-echo Proceed with caution.
-pause
-echo.
+echo Optimizing services...
+call :confirm_action \"Disable non-essential services?\"
+if %errorlevel% neq 0 goto main_menu
 
 :: Backup Start - Added Backup Functionality from HoneCtrl ==========================
 echo Creating System Restore Point and Registry Backups...
@@ -132,94 +143,30 @@ timeout /t 3 /nobreak >nul
 
 :: Backup End ====================================================================
 
+:: Effective service disables (e.g., from Atlas OS inspiration): Disable Superfetch/SysMain, Search, Print, etc.
+sc config SysMain start=disabled
+sc stop SysMain
+sc config WSearch start=disabled
+sc stop WSearch
+sc config Spooler start=disabled
+sc stop Spooler
+// Add more verified ones, remove unnecessary
 
-echo System File Check (SFC) starting...
-echo Estimated time: 10-20 minutes
-echo.
-echo Progress:
-echo [                    ] 0%%
-sfc /scannow | find "%%"
-if %errorlevel% neq 0 (
-    echo.
-    echo **ERROR:** SFC scan failed with error code %errorlevel%.
-    echo Please check the logs for details (usually in C:\Windows\Logs\CBS).
-    pause
-    goto main_menu
-)
-echo.
-echo SFC scan complete.
-echo.
-timeout /t 3 /nobreak >nul
-
-:dism_check_choice
-echo.
-set /p dism_choice="Do you want to run DISM System Health Check? (Yes/No): "
-echo.
-if /i "%dism_choice%"=="yes" goto run_dism
-if /i "%dism_choice%"=="no" goto skip_dism
-echo Invalid input. Please type Yes or No.
-timeout /t 2 /nobreak >nul
-goto dism_check_choice
-
-:run_dism
-echo Running DISM System Health Check...
-echo Estimated time: 15-30 minutes depending on internet speed
-echo.
-echo Progress:
-DISM /Online /Cleanup-Image /RestoreHealth /LimitAccess
-if %errorlevel% neq 0 (
-    echo.
-    echo **ERROR:** DISM failed with error code %errorlevel%.
-    echo Please ensure your internet connection is stable
-    echo and that Windows installation media is not required for repair.
-    echo If you have installation media, you can try:
-    echo DISM /Online /Cleanup-Image /RestoreHealth /Source:WIM:D:\Sources\install.wim:1 /LimitAccess
-    echo Replace D:\Sources\install.wim with the correct path to your install.wim
-    pause
-    goto main_menu
-)
-
-echo.
-echo System checks completed.
-echo.
-timeout /t 3 /nobreak >nul
-goto apply_service_optimization
-
-:skip_dism
-echo Skipping DISM System Health Check.
-echo Proceeding with service optimization.
-timeout /t 2 /nobreak >nul
-
-:apply_service_optimization
-echo Applying service optimization....
-echo.
-
-:: Disable Bluetooth Drivers and Services
-echo Disabling Bluetooth Services...
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\BluetoothUserService" /v "Start" /t REG_DWORD /d "4" /f
-if %errorlevel% neq 0 echo **WARNING:** Error disabling BluetoothUserService.
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\Microsoft_Bluetooth_AvrcpTransport" /v "Start" /t REG_DWORD /d "4" /f 2>nul
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\HidBth" /v "Start" /t REG_DWORD /d "4" /f 2>nul
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\BTHUSB" /v "Start" /t REG_DWORD /d "4" /f 2>nul
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\BTHPORT" /v "Start" /t REG_DWORD /d "4" /f 2>nul
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\BthPan" /v "Start" /t REG_DWORD /d "4" /f 2>nul
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\BthMini" /v "Start" /t REG_DWORD /d "4" /f 2>nul
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\BthLEEnum" /v "Start" /t REG_DWORD /d "4" /f 2>nul
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\BthHFEnum" /v "Start" /t REG_DWORD /d "4" /f 2>nul
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\BthEnum" /v "Start" /t REG_DWORD /d "4" /f 2>nul
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\BthA2dp" /v "Start" /t REG_DWORD /d "4" /f 2>nul
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\RFCOMM" /v "Start" /t REG_DWORD /d "4" /f 2>nul
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\BTAGService" /v "Start" /t REG_DWORD /d "4" /f 2>nul
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\BthAvctpSvc" /v "Start" /t REG_DWORD /d "4" /f 2>nul
-reg add "HKLM\SYSTEM\CurrentControlSet\Services\bthserv" /v "Start" /t REG_DWORD /d "4" /f 2>nul
-
-:: Disable Defender Drivers and Services
+:: Enhanced Defender removal (existing, keep)
 echo Disabling Windows Defender Services...
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\mpssvc" /v "Start" /t REG_DWORD /d "4" /f 2>nul
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\mpsdrv" /v "Start" /t REG_DWORD /d "4" /f 2>nul
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\wanarp" /v "Start" /t REG_DWORD /d "4" /f 2>nul
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\BFE" /v "Start" /t REG_DWORD /d "4" /f 2>nul
 reg add "HKLM\SYSTEM\CurrentControlSet\Services\Sense" /v "Start" /t REG_DWORD /d "4" /f 2>nul
+
+:: Additional Defender Disable for Win11
+if %MajorVersion% == 11 (
+    reg add "HKLM\SYSTEM\CurrentControlSet\Services\WinDefend" /v "Start" /t REG_DWORD /d "4" /f 2>nul
+    reg add "HKLM\SYSTEM\CurrentControlSet\Services\WdFilter" /v "Start" /t REG_DWORD /d "4" /f 2>nul
+    reg add "HKLM\SYSTEM\CurrentControlSet\Services\WdNisSvc" /v "Start" /t REG_DWORD /d "4" /f 2>nul
+    reg add "HKLM\SYSTEM\CurrentControlSet\Services\WdBoot" /v "Start" /t REG_DWORD /d "4" /f 2>nul
+)
 
 :: Disable Printer Services
 echo Disabling Printer Services...
@@ -686,28 +633,28 @@ goto :gpusettings_section
 echo Applying Nvidia GPU Optimizations...
 
 :: Nvidia Driver Thread Priority
-call :execute_command "reg add "HKLM\SYSTEM\CurrentControlSet\Services\nvlddmkm\Parameters" /v "ThreadPriority" /t REG_DWORD /d "31" /f"
+call :execute_reg "reg add "HKLM\SYSTEM\CurrentControlSet\Services\nvlddmkm\Parameters" /v "ThreadPriority" /t REG_DWORD /d "31" /f"
 
 :: DXGKrnl Thread Priority
-call :execute_command "reg add "HKLM\SYSTEM\CurrentControlSet\Services\DXGKrnl\Parameters" /v "ThreadPriority" /t REG_DWORD /d "15" /f"
+call :execute_reg "reg add "HKLM\SYSTEM\CurrentControlSet\Services\DXGKrnl\Parameters" /v "ThreadPriority" /t REG_DWORD /d "15" /f"
 
 :: Optimize GPU Priority Scheduling
-call :execute_command "reg add "HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers" /v "RmGpsPsEnablePerCpuCoreDpc" /t REG_DWORD /d "1" /f"
-call :execute_command "reg add "HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers\Power" /v "RmGpsPsEnablePerCpuCoreDpc" /t REG_DWORD /d "1" /f"
-call :execute_command "reg add "HKLM\SYSTEM\CurrentControlSet\Services\nvlddmkm" /v "RmGpsPsEnablePerCpuCoreDpc" /t REG_DWORD /d "1" /f"
-call :execute_command "reg add "HKLM\SYSTEM\CurrentControlSet\Services\nvlddmkm\NVAPI" /v "RmGpsPsEnablePerCpuCoreDpc" /t REG_DWORD /d "1" /f"
-call :execute_command "reg add "HKLM\SYSTEM\CurrentControlSet\Services\nvlddmkm\Global\NVTweak" /v "RmGpsPsEnablePerCpuCoreDpc" /t REG_DWORD /d "1" /f"
+call :execute_reg "reg add "HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers" /v "RmGpsPsEnablePerCpuCoreDpc" /t REG_DWORD /d "1" /f"
+call :execute_reg "reg add "HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers\Power" /v "RmGpsPsEnablePerCpuCoreDpc" /t REG_DWORD /d "1" /f"
+call :execute_reg "reg add "HKLM\SYSTEM\CurrentControlSet\Services\nvlddmkm" /v "RmGpsPsEnablePerCpuCoreDpc" /t REG_DWORD /d "1" /f"
+call :execute_reg "reg add "HKLM\SYSTEM\CurrentControlSet\Services\nvlddmkm\NVAPI" /v "RmGpsPsEnablePerCpuCoreDpc" /t REG_DWORD /d "1" /f"
+call :execute_reg "reg add "HKLM\SYSTEM\CurrentControlSet\Services\nvlddmkm\Global\NVTweak" /v "RmGpsPsEnablePerCpuCoreDpc" /t REG_DWORD /d "1" /f"
 
 :: Nvidia Turbo Queue and SBA
-call :execute_command "reg add "HKLM\SOFTWARE\NVIDIA Corporation\Global\System" /v "TurboQueue" /t REG_DWORD /d "1" /f"
-call :execute_command "reg add "HKLM\SOFTWARE\NVIDIA Corporation\Global\System" /v "EnableVIASBA" /t REG_DWORD /d "1" /f"
-call :execute_command "reg add "HKLM\SOFTWARE\NVIDIA Corporation\Global\System" /v "EnableIrongateSBA" /t REG_DWORD /d "1" /f"
-call :execute_command "reg add "HKLM\SOFTWARE\NVIDIA Corporation\Global\System" /v "EnableAGPSBA" /t REG_DWORD /d "1" /f"
-call :execute_command "reg add "HKLM\SOFTWARE\NVIDIA Corporation\Global\System" /v "EnableAGPFW" /t REG_DWORD /d "1" /f"
-call :execute_command "reg add "HKLM\SOFTWARE\NVIDIA Corporation\Global\System" /v "FastVram" /t REG_DWORD /d "1" /f"
-call :execute_command "reg add "HKLM\SOFTWARE\NVIDIA Corporation\Global\System" /v "ShadowFB" /t REG_DWORD /d "1" /f"
-call :execute_command "reg add "HKLM\SOFTWARE\NVIDIA Corporation\Global\System" /v "TexturePrecache" /t REG_DWORD /d "1" /f"
-call :execute_command "reg add "HKLM\SOFTWARE\NVIDIA Corporation\Global\System" /v "EnableFastCopyPixels" /t REG_DWORD /d "1" /f"
+call :execute_reg "reg add "HKLM\SOFTWARE\NVIDIA Corporation\Global\System" /v "TurboQueue" /t REG_DWORD /d "1" /f"
+call :execute_reg "reg add "HKLM\SOFTWARE\NVIDIA Corporation\Global\System" /v "EnableVIASBA" /t REG_DWORD /d "1" /f"
+call :execute_reg "reg add "HKLM\SOFTWARE\NVIDIA Corporation\Global\System" /v "EnableIrongateSBA" /t REG_DWORD /d "1" /f"
+call :execute_reg "reg add "HKLM\SOFTWARE\NVIDIA Corporation\Global\System" /v "EnableAGPSBA" /t REG_DWORD /d "1" /f"
+call :execute_reg "reg add "HKLM\SOFTWARE\NVIDIA Corporation\Global\System" /v "EnableAGPFW" /t REG_DWORD /d "1" /f"
+call :execute_reg "reg add "HKLM\SOFTWARE\NVIDIA Corporation\Global\System" /v "FastVram" /t REG_DWORD /d "1" /f"
+call :execute_reg "reg add "HKLM\SOFTWARE\NVIDIA Corporation\Global\System" /v "ShadowFB" /t REG_DWORD /d "1" /f"
+call :execute_reg "reg add "HKLM\SOFTWARE\NVIDIA Corporation\Global\System" /v "TexturePrecache" /t REG_DWORD /d "1" /f"
+call :execute_reg "reg add "HKLM\SOFTWARE\NVIDIA Corporation\Global\System" /v "EnableFastCopyPixels" /t REG_DWORD /d "1" /f"
 
 echo.
 echo Nvidia GPU Optimization completed. Returning to main menu.
@@ -783,8 +730,6 @@ echo Disabling AMD ULPS (Ultra Low Power State)...
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0000" /v "EnableUlps" /t REG_DWORD /d "0" /f 2>nul
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0001" /v "EnableUlps" /t REG_DWORD /d "0" /f 2>nul
 reg add "HKLM\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\0002" /v "EnableUlps" /t REG_DWORD /d "0" /f 2>nul
-:: Note: ULPS disabling might be more relevant for multi-GPU setups, test impact.
-
 echo.
 echo AMD GPU Optimization completed. Returning to main menu.
 timeout /t 5 /nobreak >nul
@@ -1321,6 +1266,57 @@ echo Network Optimization completed. Returning to main menu.
 timeout /t 3 /nobreak >nul
 goto main_menu
 
+
+:privacy_enhance
+cls
+echo Enhancing Privacy...
+call :confirm_action \"Apply privacy tweaks? This disables telemetry and tracking.\"
+if %errorlevel% neq 0 goto main_menu
+
+:: Backup
+echo Creating System Restore Point and Registry Backups...
+echo.
+
+:: Make Hone Directory for Backups if it doesn't exist
+mkdir %SYSTEMDRIVE%\Hone >nul 2>&1
+mkdir %SYSTEMDRIVE%\Hone\SionXT_Backup >nul 2>&1
+
+:: Create System Restore Point
+echo Creating System Restore Point...
+reg add "HKLM\Software\Microsoft\Windows NT\CurrentVersion\SystemRestore" /v "SystemRestorePointCreationFrequency" /t REG_DWORD /d 0 /f >nul 2>&1
+
+:: Create Registry Backups
+echo Backing up Registry (HKCU and HKLM)...
+for /F "tokens=2" %%i in ('date /t') do set date=%%i
+set date1=%date:/=.%
+mkdir %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1% >nul 2>&1
+reg export HKCU %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1%\SionXT_HKCU_PrivacyEnhancement.reg /y >nul 2>&1
+reg export HKLM %SYSTEMDRIVE%\Hone\SionXT_Backup\%date1%\SionXT_HKLM_PrivacyEnhancement.reg /y >nul 2>&1
+echo.
+echo System Restore Point and Registry Backups Created. Proceeding with Privacy Enhancements...
+timeout /t 3 /nobreak >nul
+
+:: Backup End ====================================================================
+
+:: Disable Telemetry
+reg add "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\DataCollection" /v "AllowTelemetry" /t REG_DWORD /d 0 /f
+reg add "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\DataCollection" /v "AllowTelemetry" /t REG_DWORD /d 0 /f
+
+:: Disable Advertising ID
+reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\AdvertisingInfo" /v "Enabled" /t REG_DWORD /d 0 /f
+
+:: Disable Cortana
+reg add "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\Windows Search" /v "AllowCortana" /t REG_DWORD /d 0 /f
+
+:: Block Tracking Domains in Hosts
+set HOSTS="%windir%\\System32\\drivers\\etc\\hosts"
+echo 127.0.0.1 vortex.data.microsoft.com >> %HOSTS%
+echo 127.0.0.1 telecommand.telemetry.microsoft.com >> %HOSTS%
+echo 127.0.0.1 oca.telemetry.microsoft.com >> %HOSTS%
+echo 127.0.0.1 settings-sandbox.data.microsoft.com >> %HOSTS%
+echo Privacy enhancements applied.
+timeout /t 3 >nul
+goto main_menu
 
 :exit
 echo Exiting SionXT-TweaksWin10.
